@@ -1,0 +1,46 @@
+import pygame
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Set screen dimensions
+screen_width = 640
+screen_height = 480
+
+# Create a Pygame window
+screen = pygame.display.set_mode((screen_width, screen_height))
+
+# Define the colors we will use
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+
+# Define the drawLine function using affine combination
+def drawLine(p0, p1):
+    a0, a1 = p0
+    b0, b1 = p1
+    steps = max(abs(b0-a0), abs(b1-a1))
+    for t in range(steps+1):
+        x = a0 + t*(b0-a0)/steps
+        y = a1 + t*(b1-a1)/steps
+        drawPoint((x, y))
+
+# Define the drawPoint function
+def drawPoint(p):
+    pygame.draw.circle(screen, WHITE, (int(p[0]), int(p[1])), 2)
+    pygame.display.update()
+
+# Start the main loop
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if pygame.mouse.get_pressed()[0]:
+                p0 = pygame.mouse.get_pos()
+                drawPoint(p0)
+            if pygame.mouse.get_pressed()[2]:
+                p1 = pygame.mouse.get_pos()
+                drawPoint(p1)
+                drawLine(p0, p1)
