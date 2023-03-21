@@ -1,0 +1,80 @@
+import pygame
+import numpy as np
+
+# Initialize Pygame
+pygame.init()
+
+# Set the dimensions of the screen
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+# Define colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+
+# Define the drawpoint function to draw a point at (x, y) with the specified color and radius
+def drawpoint(x, y, color=RED, radius=3):
+    pygame.draw.circle(screen, color, (x, y), radius)
+
+# Define the affine combination function to find the barycentric coordinates of a point p in triangle ABC
+def affine_combination(p, A, B, C):
+    # Convert the points to numpy arrays for easier calculations
+    p = np.array(p)
+    A = np.array(A)
+    B = np.array(B)
+    C = np.array(C)
+
+    # Calculate the area of the triangle
+    area = 0.5 * np.linalg.norm(np.cross(B - A, C - A))
+
+    # Calculate the barycentric coordinates
+    alpha = 0.5 * np.linalg.norm(np.cross(p - B, C - B)) / area
+    beta = 0.5 * np.linalg.norm(np.cross(p - C, A - C)) / area
+    gamma = 0.5 * np.linalg.norm(np.cross(p - A, B - A)) / area
+
+    return alpha, beta, gamma
+
+# Set up the mouse
+mouse_pressed = False
+
+# Define the vertices of the triangle
+A = (100, 100)
+B = (200, 300)
+C = (400, 200)
+
+# Main game loop
+running = True
+while running:
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            # Get the barycentric coordinates of the clicked point
+            mouse_pressed = True
+            pos = pygame.mouse.get_pos()
+            alpha, beta, gamma = affine_combination(pos, A, B, C)
+            print(f"Barycentric coordinates of {pos}: ({alpha}, {beta}, {gamma})")
+        elif event.type == pygame.MOUSEBUTTONUP:
+            mouse_pressed = False
+        elif event.type == pygame.MOUSEMOTION and mouse_pressed:
+            # Draw a line as the mouse is moved
+            pos = pygame.mouse.get_pos()
+            drawpoint(*pos)
+
+    # Clear the screen
+    screen.fill(WHITE)
+
+    # Draw the triangle
+    pygame.draw.polygon(screen, YELLOW, [A, B, C], 2)
+
+    # Update the screen
+    pygame.display.update()
+
+# Quit Pygame
+pygame.quit()
