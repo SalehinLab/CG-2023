@@ -1,0 +1,93 @@
+import pygame
+import sys
+
+# initialize Pygame
+pygame.init()
+
+# set up the window
+size = (800, 600)
+screen = pygame.display.set_mode(size)
+pygame.display.set_caption("Lagrange Interpolation")
+
+# set up colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
+# set up variables
+points = []
+selected_point = None
+dragging = False
+
+# define functions
+def draw_point(pos, color):
+    pygame.draw.circle(screen, color, pos, 5)
+
+def draw_line(start_pos, end_pos, color):
+    pygame.draw.line(screen, color, start_pos, end_pos, 3)
+
+def lagrange_interpolation(x, y, x0):
+    n = len(x)
+    y0 = 0
+    for i in range(n):
+        term = y[i]
+        for j in range(n):
+            if j != i:
+                term *= (x0 - x[j]) / (x[i] - x[j])
+        y0 += term
+    return y0
+
+# run the game loop
+while True:
+    # handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            # check if a point was clicked on
+            for point in points:
+                if pygame.Rect(point[0]-5, point[1]-5, 10, 10).collidepoint(event.pos):
+                    selected_point = point
+                    dragging = True
+                    break
+            # add a new point
+            if not selected_point:
+                points.append(event.pos)
+        elif event.type == pygame.MOUSEBUTTONUP:
+            # stop dragging
+            selected_point = None
+            dragging = False
+        elif event.type == pygame.MOUSEMOTION:
+            # move the selected point
+            if dragging:
+                selected_point[0] = event.pos[0]
+                selected_point[1] = event.pos[1]
+
+    # draw the background
+    screen.fill(WHITE)
+
+    # draw the curve
+    if len(points) >= 2:
+        for i in range(len(points)-1):
+            draw_line(points[i], points[i+1], BLUE)
+
+        x = [point[0] for point in points]
+        y = [point[1] for point in points]
+
+        # interpolate the curve
+        curve_points = []
+        for x0 in range(min(x), max(x)+1):
+            y0 = lagrange_interpolation(x, y, x0)
+            curve_points.append((x0, y0))
+
+        draw_line(curve_points[0], curve_points[-1], RED)
+
+    # draw the control points
+    for point in points:
+        draw_point(point, GREEN)
+
+    # update the screen
+    pygame.display.update()
