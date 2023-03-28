@@ -1,46 +1,55 @@
 import pygame
-import sys
 
 # Initialize Pygame
 pygame.init()
 
-# Set screen dimensions
+# Set the screen dimensions
 screen_width = 640
 screen_height = 480
-
-# Create a Pygame window
 screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption('Draw Line')
 
-# Define the colors we will use
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
+# Define colors
+black = (155, 155, 155)
+white = (0, 0, 0)
 
-# Define the drawLine function using affine combination
-def drawLine(p0, p1):
-    a0, a1 = p0
-    b0, b1 = p1
-    steps = max(abs(b0-a0), abs(b1-a1))
-    for t in range(steps+1):
-        x = a0 + t*(b0-a0)/steps
-        y = a1 + t*(b1-a1)/steps
-        drawPoint((x, y))
+# Define the radius of the point to be drawn
+radius = 5
 
-# Define the drawPoint function
-def drawPoint(p):
-    pygame.draw.circle(screen, WHITE, (int(p[0]), int(p[1])), 2)
-    pygame.display.update()
+# Create a list to store the points selected by the user
+points = []
 
-# Start the main loop
-while True:
+# Function to draw a point on the screen
+def drawPoint(pos):
+    pygame.draw.circle(screen, black, pos, radius)
+
+# Function to draw a line between two points on the screen
+def drawLine(start_pos, end_pos):
+    pygame.draw.line(screen, black, start_pos, end_pos, radius*2)
+
+# Main game loop
+running = True
+while running:
+
+    # Handle events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if pygame.mouse.get_pressed()[0]:
-                p0 = pygame.mouse.get_pos()
-                drawPoint(p0)
-            if pygame.mouse.get_pressed()[2]:
-                p1 = pygame.mouse.get_pos()
-                drawPoint(p1)
-                drawLine(p0, p1)
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            # Get the position of the mouse click
+            pos = pygame.mouse.get_pos()
+            # Add the point to the list of points
+            points.append(pos)
+            # Draw the point on the screen
+            drawPoint(pos)
+            # If two points have been selected, draw a line between them
+            if len(points) == 2:
+                drawLine(points[0], points[1])
+                # Clear the list of points
+                points = []
+
+    # Update the screen
+    pygame.display.update()
+
+# Quit Pygame
+pygame.quit()
