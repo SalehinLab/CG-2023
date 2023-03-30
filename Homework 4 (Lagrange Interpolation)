@@ -1,93 +1,86 @@
 import pygame
-import sys
+import math
 
 # initialize Pygame
 pygame.init()
 
-# set up the window
-size = (800, 600)
-screen = pygame.display.set_mode(size)
-pygame.display.set_caption("Lagrange Interpolation")
+# set screen dimensions
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 
-# set up colors
+# set colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
-GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
-# set up variables
+# set font
+font = pygame.font.SysFont(None, 30)
+
+# create screen
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Lagrange Interpolation Polynomials")
+
+# create list to hold points clicked by user
 points = []
-selected_point = None
-dragging = False
 
-# define functions
-def draw_point(pos, color):
-    pygame.draw.circle(screen, color, pos, 5)
 
-def draw_line(start_pos, end_pos, color):
-    pygame.draw.line(screen, color, start_pos, end_pos, 3)
+# function to calculate the Lagrange interpolation polynomial
+def lagrange_polynomial(x, points):
+    # initialize polynomial and degree
+    polynomial = 0
+    n = len(points) - 1
 
-def lagrange_interpolation(x, y, x0):
-    n = len(x)
-    y0 = 0
-    for i in range(n):
-        term = y[i]
-        for j in range(n):
+    # iterate over points and calculate the polynomial
+    for i in range(n + 1):
+        term = points[i][1]
+        for j in range(n + 1):
             if j != i:
-                term *= (x0 - x[j]) / (x[i] - x[j])
-        y0 += term
-    return y0
+                term = term * (x - points[j][0]) / (points[i][0] - points[j][0])
+        polynomial += term
 
-# run the game loop
-while True:
+    return polynomial
+
+
+# main loop
+running = True
+while running:
     # handle events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            # check if a point was clicked on
-            for point in points:
-                if pygame.Rect(point[0]-5, point[1]-5, 10, 10).collidepoint(event.pos):
-                    selected_point = point
-                    dragging = True
-                    break
-            # add a new point
-            if not selected_point:
-                points.append(event.pos)
-        elif event.type == pygame.MOUSEBUTTONUP:
-            # stop dragging
-            selected_point = None
-            dragging = False
-        elif event.type == pygame.MOUSEMOTION:
-            # move the selected point
-            if dragging:
-                selected_point[0] = event.pos[0]
-                selected_point[1] = event.pos[1]
+            # add point to list when user clicks the screen
+            points.append(event.pos)
 
-    # draw the background
+    # clear screen
     screen.fill(WHITE)
 
-    # draw the curve
-    if len(points) >= 2:
-        for i in range(len(points)-1):
-            draw_line(points[i], points[i+1], BLUE)
-
-        x = [point[0] for point in points]
-        y = [point[1] for point in points]
-
-        # interpolate the curve
-        curve_points = []
-        for x0 in range(min(x), max(x)+1):
-            y0 = lagrange_interpolation(x, y, x0)
-            curve_points.append((x0, y0))
-
-        draw_line(curve_points[0], curve_points[-1], RED)
-
-    # draw the control points
+    # draw points
     for point in points:
-        draw_point(point, GREEN)
+        pygame.draw.circle(screen, BLACK, point, 5)
 
-    # update the screen
-    pygame.display.update()
+    # draw lines between points
+    for i in range(len(points) - 1):
+        pygame.draw.line(screen, BLACK, points[i], points[i + 1], 2)
+
+    # draw Lagrange interpolation polynomial
+    if len(points) > 1:
+        for x in range(SCREEN_WIDTH):
+            y = lagrange_polynomial(x, points)
+            pygame.draw.circle(screen, RED, (x, y), 1)
+
+    # draw instructions
+    instructions = font.render("", True, BLACK)
+    screen.blit(instructions, (10, SCREEN_HEIGHT - 30))
+
+    # update screen
+    pygame.display.flip()
+
+    # check for exit
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_ESCAPE]:
+        running = False
+
+# quit Pygame
+pygame.quit()
