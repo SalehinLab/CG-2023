@@ -1,91 +1,93 @@
 import pygame
-import sys
+import numpy as np
 
-# initialize Pygame
+# initialize pygame
 pygame.init()
 
-# set up the window
-size = (800, 600)
-screen = pygame.display.set_mode(size)
-pygame.display.set_caption("Bezier Curve")
+# set screen size
+screen_size = (800, 600)
+screen = pygame.display.set_mode(screen_size)
 
-# set up colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+# set colors
+white = (255, 255, 255)
+black = (0, 0, 0)
+blue = (0, 0, 255)
+green = (0, 255, 0)
+red = (255, 0, 0)
 
-# set up variables
-points = []
-selected_point = None
-dragging = False
+# set font
+font = pygame.font.SysFont(None, 30)
 
-# define functions
-def draw_point(pos, color):
-    pygame.draw.circle(screen, color, pos, 5)
+# initialize control points
+control_points = []
 
-def draw_line(start_pos, end_pos, color):
-    pygame.draw.line(screen, color, start_pos, end_pos, 3)
 
-def draw_curve(points, color):
-    for i in range(len(points)-1):
-        draw_line(points[i], points[i+1], color)
+# define draw control points function
+def draw_control_points():
+    for point in control_points:
+        pygame.draw.circle(screen, blue, point, 5)
+        pygame.draw.circle(screen, black, point, 2)
 
-def calculate_bezier_point(t, points):
-    n = len(points) - 1
-    result = [0, 0]
-    for i in range(n+1):
-        coefficient = (1-t)**(n-i) * t**i
-        result[0] += coefficient * points[i][0]
-        result[1] += coefficient * points[i][1]
-    return result
 
-# run the game loop
-while True:
-    # handle events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            # check if a point was clicked on
-            for point in points:
-                if pygame.Rect(point[0]-5, point[1]-5, 10, 10).collidepoint(event.pos):
-                    selected_point = point
-                    dragging = True
-                    break
-            # add a new point
-            if not selected_point:
-                points.append(event.pos)
-        elif event.type == pygame.MOUSEBUTTONUP:
-            # stop dragging
-            selected_point = None
-            dragging = False
-        elif event.type == pygame.MOUSEMOTION:
-            # move the selected point
-            if dragging:
-                selected_point[0] = event.pos[0]
-                selected_point[1] = event.pos[1]
-
-    # draw the background
-    screen.fill(WHITE)
-
-    # draw the curve
-    if len(points) >= 2:
-        for i in range(len(points)-1):
-            draw_line(points[i], points[i+1], BLUE)
-
+# define draw Bezier curve function
+def draw_cubic_bezier_curve():
+    if len(control_points) == 4:
+        # define Bezier curve points
         curve_points = []
-        for t in range(0, 101):
-            point = calculate_bezier_point(t/100, points)
-            curve_points.append(point)
+        for t in np.arange(0, 1, 0.01):
+            x = (1 - t) ** 3 * control_points[0][0] + 3 * (1 - t) ** 2 * t * control_points[1][0] + 3 * (
+                        1 - t) * t ** 2 * control_points[2][0] + t ** 3 * control_points[3][0]
+            y = (1 - t) ** 3 * control_points[0][1] + 3 * (1 - t) ** 2 * t * control_points[1][1] + 3 * (
+                        1 - t) * t ** 2 * control_points[2][1] + t ** 3 * control_points[3][1]
+            curve_points.append((x, y))
 
-        draw_curve(curve_points, RED)
+        # draw Bezier curve
+        pygame.draw.lines(screen, green, False, curve_points, 2)
 
-    # draw the control points
-    for point in points:
-        draw_point(point, GREEN)
 
-    # update the screen
-    pygame.display.update()
+# define draw lines function
+def draw_lines():
+    if len(control_points) >= 2:
+        for i in range(len(control_points) - 1):
+            pygame.draw.line(screen, red, control_points[i], control_points[i + 1], 2)
+
+
+# define main loop
+def main_loop():
+    while True:
+        # fill screen with white color
+        screen.fill(white)
+
+        # draw control points
+        draw_control_points()
+
+        # draw Bezier curve
+        draw_cubic_bezier_curve()
+
+        # draw lines
+        draw_lines()
+
+        # draw instructions
+        text = font.render('cubic bezier curve', True, black)
+        screen.blit(text, (5, 5))
+
+        # update display
+        pygame.display.update()
+
+        # handle events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+            elif event.type == pygame.MOUSEBUTTONUP:
+                # add control point
+                control_points.append(event.pos)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                # clear control points
+                control_points.clear()
+
+
+# run main loop
+if __name__ == '__main__':
+    main_loop()
+
